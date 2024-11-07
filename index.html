@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrizes de Priorização</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-buttons {
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            margin-right: 5px;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+        }
+
+        .tab-button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .matrix-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .matrix-form input {
+            width: 80px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .finish-button {
+            background: #28a745;
+            padding: 4px 8px;
+            font-size: 0.9em;
+        }
+
+        .sort-button {
+            background: #28a745;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .result-table th, .result-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .result-table th {
+            background: #f8f9fa;
+        }
+
+        .high-priority { color: #dc3545; }
+        .medium-priority { color: #ffc107; }
+        .low-priority { color: #28a745; }
+
+        .finished-items {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .matrix-container {
+            display: none;
+        }
+
+        .matrix-container.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tab-buttons">
+        <button class="tab-button active" onclick="showMatrix('gut')">Matriz GUT</button>
+        <button class="tab-button" onclick="showMatrix('eisenhower')">Matriz Eisenhower</button>
+        <button class="tab-button" onclick="showMatrix('effort-impact')">Matriz Esforço x Impacto</button>
+    </div>
+
+    <!-- Matriz GUT -->
+    <div id="gut-matrix" class="matrix-container active">
+        <h2>Matriz GUT</h2>
+        <div class="matrix-form">
+            <div class="form-row">
+                <label>Item: <input type="text" id="gut-item" placeholder="Descrição"></label>
+                <label>Gravidade (1-5): <input type="number" min="1" max="5" id="gravidade"></label>
+                <label>Urgência (1-5): <input type="number" min="1" max="5" id="urgencia"></label>
+                <label>Tendência (1-5): <input type="number" min="1" max="5" id="tendencia"></label>
+            </div>
+            <button onclick="addItem('gut')">Adicionar Item</button>
+            <button onclick="sortItems('gut')" class="sort-button">Ordenar Itens</button>
+        </div>
+        <div id="gut-tables"></div>
+    </div>
+
+    <!-- Matriz Eisenhower -->
+    <div id="eisenhower-matrix" class="matrix-container">
+        <h2>Matriz Eisenhower</h2>
+        <div class="matrix-form">
+            <div class="form-row">
+                <label>Item: <input type="text" id="eisenhower-item" placeholder="Descrição"></label>
+                <label>Importância (1-5): <input type="number" min="1" max="5" id="importancia"></label>
+                <label>Urgência (1-5): <input type="number" min="1" max="5" id="eisenhower-urgencia"></label>
+            </div>
+            <button onclick="addItem('eisenhower')">Adicionar Item</button>
+            <button onclick="sortItems('eisenhower')" class="sort-button">Ordenar Itens</button>
+        </div>
+        <div id="eisenhower-tables"></div>
+    </div>
+
+    <!-- Matriz Esforço x Impacto -->
+    <div id="effort-impact-matrix" class="matrix-container">
+        <h2>Matriz Esforço x Impacto</h2>
+        <div class="matrix-form">
+            <div class="form-row">
+                <label>Item: <input type="text" id="effort-impact-item" placeholder="Descrição"></label>
+                <label>Esforço (1-5): <input type="number" min="1" max="5" id="esforco"></label>
+                <label>Impacto (1-5): <input type="number" min="1" max="5" id="impacto"></label>
+            </div>
+            <button onclick="addItem('effort-impact')">Adicionar Item</button>
+            <button onclick="sortItems('effort-impact')" class="sort-button">Ordenar Itens</button>
+        </div>
+        <div id="effort-impact-tables"></div>
+    </div>
+
+    <script>
+        let matrices = {
+            gut: {
+                items: [],
+                finishedItems: []
+            },
+            eisenhower: {
+                items: [],
+                finishedItems: []
+            },
+            'effort-impact': {
+                items: [],
+                finishedItems: []
+            }
+        };
+
+        function showMatrix(matrixId) {
+            document.querySelectorAll('.matrix-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            document.getElementById(`${matrixId}-matrix`).classList.add('active');
+            document.querySelector(`[onclick="showMatrix('${matrixId}')"]`).classList.add('active');
+        }
+
+        function addItem(matrixType) {
+            const item = document.getElementById(`${matrixType}-item`).value;
+            let newItem = {
+                item,
+                timestamp: new Date(),
+                dateStr: new Date().toLocaleString()
+            };
+
+            switch(matrixType) {
+                case 'gut':
+                    const g = parseInt(document.getElementById('gravidade').value);
+                    const u = parseInt(document.getElementById('urgencia').value);
+                    const t = parseInt(document.getElementById('tendencia').value);
+                    if(!item || !g || !u || !t) {
+                        alert('Preencha todos os campos!');
+                        return;
+                    }
+                    newItem = {
+                        ...newItem,
+                        gravidade: g,
+                        urgencia: u,
+                        tendencia: t,
+                        total: g * u * t
+                    };
+                    break;
+
+                case 'eisenhower':
+                    const imp = parseInt(document.getElementById('importancia').value);
+                    const urg = parseInt(document.getElementById('eisenhower-urgencia').value);
+                    if(!item || !imp || !urg) {
+                        alert('Preencha todos os campos!');
+                        return;
+                    }
+                    newItem = {
+                        ...newItem,
+                        importancia: imp,
+                        urgencia: urg,
+                        total: imp * urg
+                    };
+                    break;
+
+                case 'effort-impact':
+                    const esf = parseInt(document.getElementById('esforco').value);
+                    const imp2 = parseInt(document.getElementById('impacto').value);
+                    if(!item || !esf || !imp2) {
+                        alert('Preencha todos os campos!');
+                        return;
+                    }
+                    newItem = {
+                        ...newItem,
+                        esforco: esf,
+                        impacto: imp2,
+                        total: imp2 / esf
+                    };
+                    break;
+            }
+
+            matrices[matrixType].items.push(newItem);
+            sortItems(matrixType);
+            clearForm(matrixType);
+        }
+
+        function clearForm(matrixType) {
+            document.getElementById(`${matrixType}-item`).value = '';
+            switch(matrixType) {
+                case 'gut':
+                    document.getElementById('gravidade').value = '';
+                    document.getElementById('urgencia').value = '';
+                    document.getElementById('tendencia').value = '';
+                    break;
+                case 'eisenhower':
+                    document.getElementById('importancia').value = '';
+                    document.getElementById('eisenhower-urgencia').value = '';
+                    break;
+                case 'effort-impact':
+                    document.getElementById('esforco').value = '';
+                    document.getElementById('impacto').value = '';
+                    break;
+            }
+        }
+
+        function getPriorityClass(matrixType, item) {
+            switch(matrixType) {
+                case 'gut':
+                    if (item.total >= 60) return 'high-priority';
+                    if (item.total >= 24) return 'medium-priority';
+                    return 'low-priority';
+                case 'eisenhower':
+                    if (item.importancia >= 4 && item.urgencia >= 4) return 'high-priority';
+                    if (item.importancia >= 3 || item.urgencia >= 3) return 'medium-priority';
+                    return 'low-priority';
+                case 'effort-impact':
+                    if (item.total >= 1) return 'high-priority';
+                    if (item.total >= 0.5) return 'medium-priority';
+                    return 'low-priority';
+            }
+        }
+
+        function finishItem(matrixType, index) {
+            const item = matrices[matrixType].items[index];
+            item.finishDate = new Date();
+            item.finishDateStr = item.finishDate.toLocaleString();
+            matrices[matrixType].finishedItems.push(item);
+            matrices[matrixType].items.splice(index, 1);
+            updateTables(matrixType);
+        }
+
+        function sortItems(matrixType) {
+            matrices[matrixType].items.sort((a, b) => b.total - a.total);
+            updateTables(matrixType);
+        }
+
+        function getTableHeaders(matrixType) {
+            switch(matrixType) {
+                case 'gut':
+                    return ['Item', 'G', 'U', 'T', 'Total', 'Data/Hora', 'Prioridade', 'Ação'];
+                case 'eisenhower':
+                    return ['Item', 'Importância', 'Urgência', 'Total', 'Data/Hora', 'Prioridade', 'Ação'];
+                case 'effort-impact':
+                    return ['Item', 'Esforço', 'Impacto', 'Total', 'Data/Hora', 'Prioridade', 'Ação'];
+            }
+        }
+
+        function getTableRow(matrixType, item, index) {
+            const priorityClass = getPriorityClass(matrixType, item);
+            switch(matrixType) {
+                case 'gut':
+                    return `
+                        <td>${item.item}</td>
+                        <td>${item.gravidade}</td>
+                        <td>${item.urgencia}</td>
+                        <td>${item.tendencia}</td>
+                        <td>${item.total}</td>
+                        <td>${item.dateStr}</td>
+                        <td class="${priorityClass}">${item.total >= 60 ? 'Alta' : item.total >= 24 ? 'Média' : 'Baixa'}</td>
+                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+                    `;
+                case 'eisenhower':
+                    return `
+                        <td>${item.item}</td>
+                        <td>${item.importancia}</td>
+                        <td>${item.urgencia}</td>
+                        <td>${item.total}</td>
+                        <td>${item.dateStr}</td>
+                        <td class="${priorityClass}">${item.importancia >= 4 && item.urgencia >= 4 ? 'Fazer' : item.importancia >= 3 ? 'Agendar' : item.urgencia >= 3 ? 'Delegar' : 'Eliminar'}</td>
+                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+                    `;
+                case 'effort-impact':
+                    return `
+                        <td>${item.item}</td>
+                        <td>${item.esforco}</td>
+                        <td>${item.impacto}</td>
+                        <td>${item.total.toFixed(2)}</td>
+                        <td>${item.dateStr}</td>
+                        <td class="${priorityClass}">${item.total >= 1 ? 'Alta' : item.total >= 0.5 ? 'Média' : 'Baixa'}</td>
+                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+                    `;
+            }
+        }
+
+        function updateTables(matrixType) {
+            const container = document.getElementById(`${matrixType}-tables`);
+            const headers = getTableHeaders(matrixType);
+            
+            let html = `
+                <h3>Itens Ativos</h3>
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            ${headers.map(h => `<th>${h}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${matrices[matrixType].items.map((item, index) => `
+                            <tr>${getTableRow(matrixType, item, index)}</tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="finished-items">
+                    <h3>Itens Finalizados</h3>
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                ${headers.slice(0, -1).map(h => `<th>${h}</th>`).join('')}
+                                <th>Data Finalização</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${matrices[matrixType].finishedItems.map(item => `
+                                <tr>
+                                    ${getTableRow(matrixType, item).split('</td>').slice(0, -2).join('</td>')}
+                                    <td>${item.finishDateStr}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
