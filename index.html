@@ -266,31 +266,36 @@ function clearAllData() {
             document.querySelector(`[onclick="showMatrix('${matrixId}')"]`).classList.add('active');
         }
 
-       function addItem(matrixType) {
+      function addItem(matrixType) {
     const description = document.getElementById(`${matrixType}-description`).value;
     if (!description) return;
 
     let newItem = {
         description: description,
         inSprint: false,
-        deliveryDate: '',
-        // Mantém os campos existentes específicos de cada matriz
+        deliveryDate: ''
     };
 
-    // Adiciona campos específicos dependendo da matriz
     if (matrixType === 'gut') {
-        newItem.gravity = parseInt(document.getElementById('gut-gravity').value);
-        newItem.urgency = parseInt(document.getElementById('gut-urgency').value);
-        newItem.tendency = parseInt(document.getElementById('gut-tendency').value);
-        newItem.total = newItem.gravity * newItem.urgency * newItem.tendency;
+        const gravity = parseInt(document.getElementById('gut-gravity').value) || 0;
+        const urgency = parseInt(document.getElementById('gut-urgency').value) || 0;
+        const tendency = parseInt(document.getElementById('gut-tendency').value) || 0;
+        newItem.gravity = gravity;
+        newItem.urgency = urgency;
+        newItem.tendency = tendency;
+        newItem.total = gravity * urgency * tendency;
     } else if (matrixType === 'eisenhower') {
-        newItem.importance = parseInt(document.getElementById('eisenhower-importance').value);
-        newItem.urgency = parseInt(document.getElementById('eisenhower-urgency').value);
-        newItem.total = newItem.importance * newItem.urgency;
+        const importance = parseInt(document.getElementById('eisenhower-importance').value) || 0;
+        const urgency = parseInt(document.getElementById('eisenhower-urgency').value) || 0;
+        newItem.importance = importance;
+        newItem.urgency = urgency;
+        newItem.total = importance * urgency;
     } else if (matrixType === 'effort-impact') {
-        newItem.effort = parseInt(document.getElementById('effort-impact-effort').value);
-        newItem.impact = parseInt(document.getElementById('effort-impact-impact').value);
-        newItem.total = newItem.impact / newItem.effort;
+        const effort = parseInt(document.getElementById('effort-impact-effort').value) || 1;
+        const impact = parseInt(document.getElementById('effort-impact-impact').value) || 0;
+        newItem.effort = effort;
+        newItem.impact = impact;
+        newItem.total = impact / effort;
     }
 
     matrices[matrixType].items.push(newItem);
