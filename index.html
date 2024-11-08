@@ -121,12 +121,12 @@
     </style>
 </head>
 <body>
-    <div class="tab-buttons">
+    <<div class="tab-buttons">
         <button class="tab-button active" onclick="showMatrix('gut')">Matriz GUT</button>
         <button class="tab-button" onclick="showMatrix('eisenhower')">Matriz Eisenhower</button>
         <button class="tab-button" onclick="showMatrix('effort-impact')">Matriz Esforço x Impacto</button>
+        <button onclick="clearAllData()" style="background-color: #dc3545; float: right;">Limpar Todos os Dados</button>
     </div>
-
     <!-- Matriz GUT -->
     <div id="gut-matrix" class="matrix-container active">
         <h2>Matriz GUT</h2>
@@ -174,20 +174,52 @@
     </div>
 
     <script>
-        let matrices = {
-            gut: {
-                items: [],
-                finishedItems: []
-            },
-            eisenhower: {
-                items: [],
-                finishedItems: []
-            },
-            'effort-impact': {
-                items: [],
-                finishedItems: []
-            }
+       let matrices = {
+    gut: {
+        items: [],
+        finishedItems: []
+    },
+    eisenhower: {
+        items: [],
+        finishedItems: []
+    },
+    'effort-impact': {
+        items: [],
+        finishedItems: []
+    }
+};
+
+// Carrega dados salvos ao iniciar
+function loadSavedData() {
+    const savedData = localStorage.getItem('matricesPriorizacao');
+    if (savedData) {
+        matrices = JSON.parse(savedData);
+        // Atualiza todas as tabelas
+        updateTables('gut');
+        updateTables('eisenhower');
+        updateTables('effort-impact');
+    }
+}
+
+// Salva dados no localStorage
+function saveData() {
+    localStorage.setItem('matricesPriorizacao', JSON.stringify(matrices));
+}
+
+// Função para limpar dados
+function clearAllData() {
+    if (confirm('Tem certeza que deseja apagar todos os dados?')) {
+        localStorage.removeItem('matricesPriorizacao');
+        matrices = {
+            gut: { items: [], finishedItems: [] },
+            eisenhower: { items: [], finishedItems: [] },
+            'effort-impact': { items: [], finishedItems: [] }
         };
+        updateTables('gut');
+        updateTables('eisenhower');
+        updateTables('effort-impact');
+    }
+}
 
         function showMatrix(matrixId) {
             document.querySelectorAll('.matrix-container').forEach(container => {
@@ -261,6 +293,7 @@
             matrices[matrixType].items.push(newItem);
             sortItems(matrixType);
             clearForm(matrixType);
+            saveData();
         }
 
         function clearForm(matrixType) {
@@ -306,11 +339,13 @@
             matrices[matrixType].finishedItems.push(item);
             matrices[matrixType].items.splice(index, 1);
             updateTables(matrixType);
+            saveData();
         }
 
         function sortItems(matrixType) {
             matrices[matrixType].items.sort((a, b) => b.total - a.total);
             updateTables(matrixType);
+            saveData();
         }
 
         function getTableHeaders(matrixType) {
