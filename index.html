@@ -286,14 +286,14 @@ function clearAllData() {
         newItem.tendencia = tendencia;
         newItem.total = gravidade * urgencia * tendencia;
     } else if (matrixType === 'eisenhower') {
-        const importancia = parseInt(document.getElementById('importancia').value) || 0;
-        const urgencia = parseInt(document.getElementById('eisenhower-urgencia').value) || 0;
+        const importancia = parseInt(document.getElementById('importancia').value) || 1;
+        const urgencia = parseInt(document.getElementById('eisenhower-urgencia').value) || 1;
         newItem.importancia = importancia;
         newItem.urgencia = urgencia;
         newItem.total = importancia * urgencia;
     } else if (matrixType === 'effort-impact') {
         const esforco = parseInt(document.getElementById('esforco').value) || 1;
-        const impacto = parseInt(document.getElementById('impacto').value) || 0;
+        const impacto = parseInt(document.getElementById('impacto').value) || 1;
         newItem.esforco = esforco;
         newItem.impacto = impacto;
         newItem.total = impacto / esforco;
@@ -369,42 +369,42 @@ function clearAllData() {
             }
         }
 
-        function getTableRow(matrixType, item, index) {
-            const priorityClass = getPriorityClass(matrixType, item);
-            switch(matrixType) {
-                case 'gut':
-                    return `
-                        <td>${item.item}</td>
-                        <td>${item.gravidade}</td>
-                        <td>${item.urgencia}</td>
-                        <td>${item.tendencia}</td>
-                        <td>${item.total}</td>
-                        <td>${item.dateStr}</td>
-                        <td class="${priorityClass}">${item.total >= 60 ? 'Alta' : item.total >= 24 ? 'Média' : 'Baixa'}</td>
-                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
-                    `;
-                case 'eisenhower':
-                    return `
-                        <td>${item.item}</td>
-                        <td>${item.importancia}</td>
-                        <td>${item.urgencia}</td>
-                        <td>${item.total}</td>
-                        <td>${item.dateStr}</td>
-                        <td class="${priorityClass}">${item.importancia >= 4 && item.urgencia >= 4 ? 'Fazer' : item.importancia >= 3 ? 'Agendar' : item.urgencia >= 3 ? 'Delegar' : 'Eliminar'}</td>
-                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
-                    `;
-                case 'effort-impact':
-                    return `
-                        <td>${item.item}</td>
-                        <td>${item.esforco}</td>
-                        <td>${item.impacto}</td>
-                        <td>${item.total.toFixed(2)}</td>
-                        <td>${item.dateStr}</td>
-                        <td class="${priorityClass}">${item.total >= 1 ? 'Alta' : item.total >= 0.5 ? 'Média' : 'Baixa'}</td>
-                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
-                    `;
-            }
-        }
+       function getTableRow(matrixType, item, index) {
+    const priorityClass = getPriorityClass(matrixType, item);
+    switch(matrixType) {
+        case 'gut':
+            return `
+                <td>${item.description}</td>
+                <td>${item.gravidade}</td>
+                <td>${item.urgencia}</td>
+                <td>${item.tendencia}</td>
+                <td>${item.total}</td>
+                <td>${item.dateStr}</td>
+                <td class="${priorityClass}">${item.total >= 60 ? 'Alta' : item.total >= 24 ? 'Média' : 'Baixa'}</td>
+                <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+            `;
+        case 'eisenhower':
+            return `
+                <td>${item.description}</td>
+                <td>${item.importancia}</td>
+                <td>${item.urgencia}</td>
+                <td>${item.total}</td>
+                <td>${item.dateStr}</td>
+                <td class="${priorityClass}">${item.importancia >= 4 && item.urgencia >= 4 ? 'Fazer' : item.importancia >= 3 ? 'Agendar' : item.urgencia >= 3 ? 'Delegar' : 'Eliminar'}</td>
+                <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+            `;
+        case 'effort-impact':
+            return `
+                <td>${item.description}</td>
+                <td>${item.esforco}</td>
+                <td>${item.impacto}</td>
+                <td>${item.total.toFixed(2)}</td>
+                <td>${item.dateStr}</td>
+                <td class="${priorityClass}">${item.total >= 1 ? 'Alta' : item.total >= 0.5 ? 'Média' : 'Baixa'}</td>
+                <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+            `;
+    }
+}
 
         function updateTables(matrixType) {
     const activeTable = document.getElementById(`${matrixType}-active-items`);
