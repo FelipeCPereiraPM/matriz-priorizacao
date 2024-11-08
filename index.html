@@ -153,7 +153,7 @@ input[type="date"] {
     </style>
 </head>
 <body>
-    <<div class="tab-buttons">
+    <div class="tab-buttons">
         <button class="tab-button active" onclick="showMatrix('gut')">Matriz GUT</button>
         <button class="tab-button" onclick="showMatrix('eisenhower')">Matriz Eisenhower</button>
         <button class="tab-button" onclick="showMatrix('effort-impact')">Matriz Esforço x Impacto</button>
@@ -266,42 +266,44 @@ function clearAllData() {
             document.querySelector(`[onclick="showMatrix('${matrixId}')"]`).classList.add('active');
         }
 
-      function addItem(matrixType) {
-    const description = document.getElementById(`${matrixType}-description`).value;
+     function addItem(matrixType) {
+    const description = document.getElementById(`${matrixType}-item`).value;
     if (!description) return;
 
     let newItem = {
         description: description,
         inSprint: false,
-        deliveryDate: ''
+        deliveryDate: '',
+        dateStr: new Date().toLocaleString()
     };
 
     if (matrixType === 'gut') {
-        const gravity = parseInt(document.getElementById('gut-gravity').value) || 0;
-        const urgency = parseInt(document.getElementById('gut-urgency').value) || 0;
-        const tendency = parseInt(document.getElementById('gut-tendency').value) || 0;
-        newItem.gravity = gravity;
-        newItem.urgency = urgency;
-        newItem.tendency = tendency;
-        newItem.total = gravity * urgency * tendency;
+        const gravidade = parseInt(document.getElementById('gravidade').value) || 0;
+        const urgencia = parseInt(document.getElementById('urgencia').value) || 0;
+        const tendencia = parseInt(document.getElementById('tendencia').value) || 0;
+        newItem.gravidade = gravidade;
+        newItem.urgencia = urgencia;
+        newItem.tendencia = tendencia;
+        newItem.total = gravidade * urgencia * tendencia;
     } else if (matrixType === 'eisenhower') {
-        const importance = parseInt(document.getElementById('eisenhower-importance').value) || 0;
-        const urgency = parseInt(document.getElementById('eisenhower-urgency').value) || 0;
-        newItem.importance = importance;
-        newItem.urgency = urgency;
-        newItem.total = importance * urgency;
+        const importancia = parseInt(document.getElementById('importancia').value) || 0;
+        const urgencia = parseInt(document.getElementById('eisenhower-urgencia').value) || 0;
+        newItem.importancia = importancia;
+        newItem.urgencia = urgencia;
+        newItem.total = importancia * urgencia;
     } else if (matrixType === 'effort-impact') {
-        const effort = parseInt(document.getElementById('effort-impact-effort').value) || 1;
-        const impact = parseInt(document.getElementById('effort-impact-impact').value) || 0;
-        newItem.effort = effort;
-        newItem.impact = impact;
-        newItem.total = impact / effort;
+        const esforco = parseInt(document.getElementById('esforco').value) || 1;
+        const impacto = parseInt(document.getElementById('impacto').value) || 0;
+        newItem.esforco = esforco;
+        newItem.impacto = impacto;
+        newItem.total = impacto / esforco;
     }
 
     matrices[matrixType].items.push(newItem);
     sortItems(matrixType);
     clearForm(matrixType);
     saveData();
+    updateTables(matrixType);
 }
 
         function clearForm(matrixType) {
