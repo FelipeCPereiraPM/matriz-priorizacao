@@ -118,38 +118,6 @@
                 align-items: flex-start;
             }
         }
-        .sprint-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.sprint-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 800px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.in-sprint {
-    accent-color: #4CAF50;
-}
-
-input[type="date"] {
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
     </style>
 </head>
 <body>
@@ -157,9 +125,8 @@ input[type="date"] {
         <button class="tab-button active" onclick="showMatrix('gut')">Matriz GUT</button>
         <button class="tab-button" onclick="showMatrix('eisenhower')">Matriz Eisenhower</button>
         <button class="tab-button" onclick="showMatrix('effort-impact')">Matriz Esforço x Impacto</button>
-        <button onclick="clearAllData()" style="background-color: #dc3545; float: right;">Limpar Todos os Dados</button>
-        <button onclick="showSprintView()" style="background-color: #4CAF50; float: right; margin-right: 10px;">Ver Sprint</button>       
     </div>
+
     <!-- Matriz GUT -->
     <div id="gut-matrix" class="matrix-container active">
         <h2>Matriz GUT</h2>
@@ -207,52 +174,20 @@ input[type="date"] {
     </div>
 
     <script>
-       let matrices = {
-    gut: {
-        items: [],
-        finishedItems: []
-    },
-    eisenhower: {
-        items: [],
-        finishedItems: []
-    },
-    'effort-impact': {
-        items: [],
-        finishedItems: []
-    }
-};
-
-// Carrega dados salvos ao iniciar
-function loadSavedData() {
-    const savedData = localStorage.getItem('matricesPriorizacao');
-    if (savedData) {
-        matrices = JSON.parse(savedData);
-        // Atualiza todas as tabelas
-        updateTables('gut');
-        updateTables('eisenhower');
-        updateTables('effort-impact');
-    }
-}
-
-// Salva dados no localStorage
-function saveData() {
-    localStorage.setItem('matricesPriorizacao', JSON.stringify(matrices));
-}
-
-// Função para limpar dados
-function clearAllData() {
-    if (confirm('Tem certeza que deseja apagar todos os dados?')) {
-        localStorage.removeItem('matricesPriorizacao');
-        matrices = {
-            gut: { items: [], finishedItems: [] },
-            eisenhower: { items: [], finishedItems: [] },
-            'effort-impact': { items: [], finishedItems: [] }
+        let matrices = {
+            gut: {
+                items: [],
+                finishedItems: []
+            },
+            eisenhower: {
+                items: [],
+                finishedItems: []
+            },
+            'effort-impact': {
+                items: [],
+                finishedItems: []
+            }
         };
-        updateTables('gut');
-        updateTables('eisenhower');
-        updateTables('effort-impact');
-    }
-}
 
         function showMatrix(matrixId) {
             document.querySelectorAll('.matrix-container').forEach(container => {
@@ -266,45 +201,67 @@ function clearAllData() {
             document.querySelector(`[onclick="showMatrix('${matrixId}')"]`).classList.add('active');
         }
 
-     function addItem(matrixType) {
-    const description = document.getElementById(`${matrixType}-item`).value;
-    if (!description) return;
+        function addItem(matrixType) {
+            const item = document.getElementById(`${matrixType}-item`).value;
+            let newItem = {
+                item,
+                timestamp: new Date(),
+                dateStr: new Date().toLocaleString()
+            };
 
-    let newItem = {
-        description: description,
-        inSprint: false,
-        deliveryDate: '',
-        dateStr: new Date().toLocaleString()
-    };
+            switch(matrixType) {
+                case 'gut':
+                    const g = parseInt(document.getElementById('gravidade').value);
+                    const u = parseInt(document.getElementById('urgencia').value);
+                    const t = parseInt(document.getElementById('tendencia').value);
+                    if(!item || !g || !u || !t) {
+                        alert('Preencha todos os campos!');
+                        return;
+                    }
+                    newItem = {
+                        ...newItem,
+                        gravidade: g,
+                        urgencia: u,
+                        tendencia: t,
+                        total: g * u * t
+                    };
+                    break;
 
-    if (matrixType === 'gut') {
-        const gravidade = parseInt(document.getElementById('gravidade').value) || 0;
-        const urgencia = parseInt(document.getElementById('urgencia').value) || 0;
-        const tendencia = parseInt(document.getElementById('tendencia').value) || 0;
-        newItem.gravidade = gravidade;
-        newItem.urgencia = urgencia;
-        newItem.tendencia = tendencia;
-        newItem.total = gravidade * urgencia * tendencia;
-    } else if (matrixType === 'eisenhower') {
-        const importancia = parseInt(document.getElementById('importancia').value) || 1;
-        const urgencia = parseInt(document.getElementById('eisenhower-urgencia').value) || 1;
-        newItem.importancia = importancia;
-        newItem.urgencia = urgencia;
-        newItem.total = importancia * urgencia;
-    } else if (matrixType === 'effort-impact') {
-        const esforco = parseInt(document.getElementById('esforco').value) || 1;
-        const impacto = parseInt(document.getElementById('impacto').value) || 1;
-        newItem.esforco = esforco;
-        newItem.impacto = impacto;
-        newItem.total = impacto / esforco;
-    }
+                case 'eisenhower':
+                    const imp = parseInt(document.getElementById('importancia').value);
+                    const urg = parseInt(document.getElementById('eisenhower-urgencia').value);
+                    if(!item || !imp || !urg) {
+                        alert('Preencha todos os campos!');
+                        return;
+                    }
+                    newItem = {
+                        ...newItem,
+                        importancia: imp,
+                        urgencia: urg,
+                        total: imp * urg
+                    };
+                    break;
 
-    matrices[matrixType].items.push(newItem);
-    sortItems(matrixType);
-    clearForm(matrixType);
-    saveData();
-    updateTables(matrixType);
-}
+                case 'effort-impact':
+                    const esf = parseInt(document.getElementById('esforco').value);
+                    const imp2 = parseInt(document.getElementById('impacto').value);
+                    if(!item || !esf || !imp2) {
+                        alert('Preencha todos os campos!');
+                        return;
+                    }
+                    newItem = {
+                        ...newItem,
+                        esforco: esf,
+                        impacto: imp2,
+                        total: imp2 / esf
+                    };
+                    break;
+            }
+
+            matrices[matrixType].items.push(newItem);
+            sortItems(matrixType);
+            clearForm(matrixType);
+        }
 
         function clearForm(matrixType) {
             document.getElementById(`${matrixType}-item`).value = '';
@@ -349,13 +306,11 @@ function clearAllData() {
             matrices[matrixType].finishedItems.push(item);
             matrices[matrixType].items.splice(index, 1);
             updateTables(matrixType);
-            saveData();
         }
 
         function sortItems(matrixType) {
             matrices[matrixType].items.sort((a, b) => b.total - a.total);
             updateTables(matrixType);
-            saveData();
         }
 
         function getTableHeaders(matrixType) {
@@ -369,148 +324,85 @@ function clearAllData() {
             }
         }
 
-       function getTableRow(matrixType, item, index) {
-    const priorityClass = getPriorityClass(matrixType, item);
-    switch(matrixType) {
-        case 'gut':
-            return `
-                <td>${item.description}</td>
-                <td>${item.gravidade}</td>
-                <td>${item.urgencia}</td>
-                <td>${item.tendencia}</td>
-                <td>${item.total}</td>
-                <td>${item.dateStr}</td>
-                <td class="${priorityClass}">${item.total >= 60 ? 'Alta' : item.total >= 24 ? 'Média' : 'Baixa'}</td>
-                <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
-            `;
-        case 'eisenhower':
-            return `
-                <td>${item.description}</td>
-                <td>${item.importancia}</td>
-                <td>${item.urgencia}</td>
-                <td>${item.total}</td>
-                <td>${item.dateStr}</td>
-                <td class="${priorityClass}">${item.importancia >= 4 && item.urgencia >= 4 ? 'Fazer' : item.importancia >= 3 ? 'Agendar' : item.urgencia >= 3 ? 'Delegar' : 'Eliminar'}</td>
-                <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
-            `;
-        case 'effort-impact':
-            return `
-                <td>${item.description}</td>
-                <td>${item.esforco}</td>
-                <td>${item.impacto}</td>
-                <td>${item.total.toFixed(2)}</td>
-                <td>${item.dateStr}</td>
-                <td class="${priorityClass}">${item.total >= 1 ? 'Alta' : item.total >= 0.5 ? 'Média' : 'Baixa'}</td>
-                <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
-            `;
-    }
-}
+        function getTableRow(matrixType, item, index) {
+            const priorityClass = getPriorityClass(matrixType, item);
+            switch(matrixType) {
+                case 'gut':
+                    return `
+                        <td>${item.item}</td>
+                        <td>${item.gravidade}</td>
+                        <td>${item.urgencia}</td>
+                        <td>${item.tendencia}</td>
+                        <td>${item.total}</td>
+                        <td>${item.dateStr}</td>
+                        <td class="${priorityClass}">${item.total >= 60 ? 'Alta' : item.total >= 24 ? 'Média' : 'Baixa'}</td>
+                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+                    `;
+                case 'eisenhower':
+                    return `
+                        <td>${item.item}</td>
+                        <td>${item.importancia}</td>
+                        <td>${item.urgencia}</td>
+                        <td>${item.total}</td>
+                        <td>${item.dateStr}</td>
+                        <td class="${priorityClass}">${item.importancia >= 4 && item.urgencia >= 4 ? 'Fazer' : item.importancia >= 3 ? 'Agendar' : item.urgencia >= 3 ? 'Delegar' : 'Eliminar'}</td>
+                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+                    `;
+                case 'effort-impact':
+                    return `
+                        <td>${item.item}</td>
+                        <td>${item.esforco}</td>
+                        <td>${item.impacto}</td>
+                        <td>${item.total.toFixed(2)}</td>
+                        <td>${item.dateStr}</td>
+                        <td class="${priorityClass}">${item.total >= 1 ? 'Alta' : item.total >= 0.5 ? 'Média' : 'Baixa'}</td>
+                        <td><button onclick="finishItem('${matrixType}', ${index})" class="finish-button">Finalizar</button></td>
+                    `;
+            }
+        }
 
         function updateTables(matrixType) {
-    const activeTable = document.getElementById(`${matrixType}-active-items`);
-    const finishedTable = document.getElementById(`${matrixType}-finished-items`);
-    
-    activeTable.innerHTML = `
-        <tr>
-            <th>Descrição</th>
-            <th>Total</th>
-            <th>Sprint</th>
-            <th>Data Entrega</th>
-            <th>Ações</th>
-        </tr>
-    `;
-    
-    finishedTable.innerHTML = `
-        <tr>
-            <th>Descrição</th>
-            <th>Total</th>
-            <th>Sprint</th>
-            <th>Data Entrega</th>
-            <th>Status</th>
-        </tr>
-    `;
+            const container = document.getElementById(`${matrixType}-tables`);
+            const headers = getTableHeaders(matrixType);
+            
+            let html = `
+                <h3>Itens Ativos</h3>
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            ${headers.map(h => `<th>${h}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${matrices[matrixType].items.map((item, index) => `
+                            <tr>${getTableRow(matrixType, item, index)}</tr>
+                        `).join('')}
+                    </tbody>
+                </table>
 
-    matrices[matrixType].items.forEach((item, index) => {
-        const row = activeTable.insertRow(-1);
-        row.innerHTML = `
-            <td>${item.description}</td>
-            <td>${item.total.toFixed(2)}</td>
-            <td>
-                <input type="checkbox" 
-                    ${item.inSprint ? 'checked' : ''} 
-                    onchange="toggleSprint('${matrixType}', ${index})"
-                    ${item.inSprint ? 'class="in-sprint"' : ''}>
-            </td>
-            <td>
-                <input type="date" 
-                    value="${item.deliveryDate}"
-                    onchange="setDeliveryDate('${matrixType}', ${index}, this.value)">
-            </td>
-            <td>
-                <button onclick="finishItem('${matrixType}', ${index})">Concluir</button>
-            </td>
-        `;
-    });
+                <div class="finished-items">
+                    <h3>Itens Finalizados</h3>
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                ${headers.slice(0, -1).map(h => `<th>${h}</th>`).join('')}
+                                <th>Data Finalização</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${matrices[matrixType].finishedItems.map(item => `
+                                <tr>
+                                    ${getTableRow(matrixType, item).split('</td>').slice(0, -2).join('</td>')}
+                                    <td>${item.finishDateStr}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
 
-    matrices[matrixType].finishedItems.forEach(item => {
-        const row = finishedTable.insertRow(-1);
-        row.innerHTML = `
-            <td>${item.description}</td>
-            <td>${item.total.toFixed(2)}</td>
-            <td>${item.inSprint ? 'Sim' : 'Não'}</td>
-            <td>${item.deliveryDate || '-'}</td>
-            <td>Concluído</td>
-        `;
-    });
-}
-        function toggleSprint(matrixType, index) {
-    matrices[matrixType].items[index].inSprint = !matrices[matrixType].items[index].inSprint;
-    saveData();
-    updateTables(matrixType);
-}
-
-function setDeliveryDate(matrixType, index, date) {
-    matrices[matrixType].items[index].deliveryDate = date;
-    saveData();
-    updateTables(matrixType);
-}
-
-function showSprintView() {
-    const sprintItems = [];
-    ['gut', 'eisenhower', 'effort-impact'].forEach(matrixType => {
-        matrices[matrixType].items.forEach(item => {
-            if (item.inSprint) {
-                sprintItems.push({...item, matrix: matrixType});
-            }
-        });
-    });
-
-    const sprintModal = document.createElement('div');
-    sprintModal.className = 'sprint-modal';
-    sprintModal.innerHTML = `
-        <div class="sprint-content">
-            <h2>Itens da Sprint</h2>
-            <table>
-                <tr>
-                    <th>Descrição</th>
-                    <th>Matriz</th>
-                    <th>Prioridade</th>
-                    <th>Data Entrega</th>
-                </tr>
-                ${sprintItems.map(item => `
-                    <tr>
-                        <td>${item.description}</td>
-                        <td>${item.matrix}</td>
-                        <td>${item.total.toFixed(2)}</td>
-                        <td>${item.deliveryDate || '-'}</td>
-                    </tr>
-                `).join('')}
-            </table>
-            <button onclick="this.parentElement.parentElement.remove()">Fechar</button>
-        </div>
-    `;
-    document.body.appendChild(sprintModal);
-}
+            container.innerHTML = html;
+        }
     </script>
 </body>
 </html>
